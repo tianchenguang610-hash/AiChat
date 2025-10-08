@@ -42,15 +42,15 @@ export async function POST(req: NextRequest) {
       "英文": "English",
       "日文": "Japanese"
     };
-    
+    type Lang = keyof typeof languageMap;
     const toneMap = {
       "正式": "formal",
       "友好": "friendly",
       "专业": "professional"
     };
     
-    const mappedLanguage = languageMap[language] || "Chinese";
-    const mappedTone = toneMap[tone] || "professional";
+    const mappedLanguage = languageMap[language as Lang];
+    const mappedTone    = toneMap[tone as keyof typeof toneMap];
     
     systemPrompt += ` Please write in ${mappedLanguage} with a ${mappedTone} tone,`;
     systemPrompt += ` about the following keywords: ${keywords}.`;
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
         try {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.error?.message || errorData.error || errorMessage;
-        } catch (e) {
+        } catch (_) {
           errorMessage = errorText || errorMessage;
         }
         
