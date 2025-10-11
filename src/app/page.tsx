@@ -124,11 +124,13 @@ export default function Home() {
         }
         break; // 成功后跳出重试循环
         
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("生成失败:", error);
-        
+
+        const message = error instanceof Error ? error.message : String(error);
+
         // 如果是网络错误且还有重试次数，继续重试
-        if (retryCount < maxRetries - 1 && (error instanceof TypeError || error.message.includes('fetch'))) {
+        if (retryCount < maxRetries - 1 && (error instanceof TypeError || message.includes('fetch'))) {
           retryCount++;
           import('sonner').then(({ toast }) => {
             toast.warning(`网络错误，正在重试... (${retryCount}/${maxRetries})`);
@@ -136,10 +138,10 @@ export default function Home() {
           await new Promise(resolve => setTimeout(resolve, 1000));
           continue;
         }
-        
+
         // 最终失败
         import('sonner').then(({ toast }) => {
-          toast.error(error instanceof Error ? error.message : '生成失败，请稍后重试或切换其他模型');
+          toast.error(message || '生成失败，请稍后重试或切换其他模型');
         });
         break;
       }
