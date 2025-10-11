@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -9,12 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/lib/supabaseClient";
+import Image from "next/image";
 
 export default function Home() {
   // 状态管理
   const [isLoading, setIsLoading] = useState(false);
   const [aiOutput, setAiOutput] = useState("");
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     model: "meta-llama/llama-3.2-3b-instruct:free",
     keywords: "",
@@ -152,10 +154,12 @@ export default function Home() {
       <div className="flex items-center justify-end mb-4">
         {user ? (
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src={user.user_metadata?.avatar_url || user.user_metadata?.picture || "/vercel.svg"}
               alt={user.user_metadata?.full_name || user.user_metadata?.name || "avatar"}
-              className="w-8 h-8 rounded-full border"
+              width={32}
+              height={32}
+              className="rounded-full border"
             />
             <span className="text-sm text-muted-foreground">
               {user.user_metadata?.full_name || user.user_metadata?.name || user.email}
@@ -310,7 +314,7 @@ export default function Home() {
                 <div className="text-muted-foreground flex flex-col items-center justify-center h-full gap-2">
                   <div className="text-4xl">✨</div>
                   <p>AI 生成的内容将显示在这里</p>
-                  <p className="text-xs">填写左侧表单并点击"开始生成"</p>
+                  <p className="text-xs">填写左侧表单并点击&nbsp;&quot;开始生成&quot;</p>
                 </div>
               )}
             </div>
