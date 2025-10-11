@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     // 验证必要的字段
     if (!model || !keywords || !description) {
       return NextResponse.json(
-        { error: 'Missing required parameters' },
+        { error: '缺少必要参数' },
         { status: 400 }
       );
     }
@@ -23,38 +23,65 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'Missing OpenRouter API Key' },
+        { error: '缺少 OpenRouter API Key' },
         { status: 500 }
       );
     }
 
     // 构建 System Prompt
-    let systemPrompt = `You are a professional writing assistant.`;
+    let systemPrompt = '';
     
-    // 添加角色设定
-    if (role) {
-      systemPrompt += ` ${role}`;
+    // 根据语言设置不同的系统提示词
+    if (language === '中文') {
+      systemPrompt = `你是一位专业的写作助手。`;
+      
+      // 添加角色设定
+      if (role) {
+        systemPrompt += ` ${role}`;
+      }
+      
+      // 添加语气设定
+      const toneMap = {
+        "正式": "正式",
+        "友好": "友好",
+        "专业": "专业",
+        "幽默": "幽默",
+        "非正式": "轻松"
+      };
+      const mappedTone = toneMap[tone as keyof typeof toneMap] || "专业";
+      
+      systemPrompt += ` 请用${mappedTone}的语气，围绕以下关键词：${keywords}，写一篇内容。`;
+      systemPrompt += ` 确保内容逻辑清晰、结构完整、有深度。请务必使用中文回答。`;
+    } else {
+      systemPrompt = `You are a professional writing assistant.`;
+      
+      // 添加角色设定
+      if (role) {
+        systemPrompt += ` ${role}`;
+      }
+      
+      // 添加语言和语气设定
+      const languageMap = {
+        "中文": "Chinese",
+        "英文": "English",
+        "日文": "Japanese"
+      };
+      type Lang = keyof typeof languageMap;
+      const toneMap = {
+        "正式": "formal",
+        "友好": "friendly",
+        "专业": "professional",
+        "幽默": "humorous",
+        "非正式": "informal"
+      };
+      
+      const mappedLanguage = languageMap[language as Lang];
+      const mappedTone = toneMap[tone as keyof typeof toneMap];
+      
+      systemPrompt += ` Please write in ${mappedLanguage} with a ${mappedTone} tone,`;
+      systemPrompt += ` about the following keywords: ${keywords}.`;
+      systemPrompt += ` Ensure the content is logically clear, well-structured, and has depth.`;
     }
-    
-    // 添加语言和语气设定
-    const languageMap = {
-      "中文": "Chinese",
-      "英文": "English",
-      "日文": "Japanese"
-    };
-    type Lang = keyof typeof languageMap;
-    const toneMap = {
-      "正式": "formal",
-      "友好": "friendly",
-      "专业": "professional"
-    };
-    
-    const mappedLanguage = languageMap[language as Lang];
-    const mappedTone    = toneMap[tone as keyof typeof toneMap];
-    
-    systemPrompt += ` Please write in ${mappedLanguage} with a ${mappedTone} tone,`;
-    systemPrompt += ` about the following keywords: ${keywords}.`;
-    systemPrompt += ` Ensure the content is logically clear, well-structured, and has depth.`;
 
     // 构建请求体
     const requestBody = {
@@ -85,7 +112,7 @@ export async function POST(req: NextRequest) {
         const errorText = await response.text();
         console.error('OpenRouter API Error:', errorText);
         
-        let errorMessage = 'API call failed';
+        let errorMessage = 'API 调用失败';
         try {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.error?.message || errorData.error || errorMessage;
@@ -106,14 +133,14 @@ export async function POST(req: NextRequest) {
     } catch (fetchError) {
       console.error('Fetch error:', fetchError);
       return NextResponse.json(
-        { error: 'Failed to connect to OpenRouter API' },
+        { error: '无法连接到 OpenRouter API' },
         { status: 500 }
       );
     }
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json(
-      { error: 'Server internal error' },
+      { error: '服务器内部错误' },
       { status: 500 }
     );
   }
